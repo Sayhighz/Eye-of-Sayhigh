@@ -13,34 +13,19 @@ intents.members = True
 client = discord.Client(intents=intents)
 
 
-async def get_steam_id_from_custom_url(custom_url):
+async def get_steam_id(custom_url):
     try:
+        if custom_url == '123':
+            return "unknow"
         response = requests.get(
             f'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={config.STEAM_API_KEY}&vanityurl={custom_url}')
         response_json = response.json()
         if response_json['response']['success'] == 1:
             return response_json['response']['steamid']
+        else:
+            return "unknow"
     except:
-        return None
-
-
-async def showServer(serverName):
-    try:
-        destination = requests.get(
-            f"https://www.battlemetrics.com/servers/ark?q={serverName}&sort=score")
-        soup = BeautifulSoup(destination.content, 'html.parser')
-
-        all_servername_raw = soup.find_all("a")
-        all_server_list = {}
-
-        for serverList in all_servername_raw:
-            if serverList.get("title"):
-                for numberServer in range(1, 11):
-                    all_server_list[numberServer] = [
-                        (serverList.get("title"), serverList.get("href"))]
-        return all_server_list
-    except:
-        pass
+        return "unknow"
 
 
 @client.event
@@ -61,86 +46,88 @@ async def on_message(message):
     # funcion show player name and time on server
     if message.content.startswith('!s'):
         serverName = message.content.split()[1]
-    try:
-        # show server from battlemetrics
-        destination = requests.get(
-            f"https://www.battlemetrics.com/servers/ark?q={serverName}&sort=score")
-        soup = BeautifulSoup(destination.content, 'html.parser')
+        try:
+            # show server from battlemetrics
+            destination = requests.get(
+                f"https://www.battlemetrics.com/servers/ark?q={serverName}&sort=score")
+            soup = BeautifulSoup(destination.content, 'html.parser')
 
-        all_servername_raw = soup.find_all("a")
-        global all_server_list
-        all_server_list = {}
-        list_number = 0
+            all_servername_raw = soup.find_all("a")
+            global all_server_list
+            all_server_list = {}
+            list_number = 0
 
-        for serverList in all_servername_raw:
-            if serverList.get("title"):
-                list_number += 1
-                all_server_list[list_number] = [
-                    (serverList.get("title"), serverList.get("href"))]
-                
-        server_list = ("""```## Multiple servers found. Specify the server name or enter a number.
-                       
-                       """)
-        
-        for number, name in all_server_list.items():
-            server_list += (f"\n({number}) - { name[0][0]}")
-        await message.channel.send(server_list+"```")
-    except:
-        pass
+            for serverList in all_servername_raw:
+                if serverList.get("title"):
+                    list_number += 1
+                    all_server_list[list_number] = [
+                        (serverList.get("title"), serverList.get("href"))]
 
-    try:
-        # wait message from user
-        response = await client.wait_for(
-            'message',
-            timeout=15,
-            check=lambda m: m.author == message.author
-        )
-        server_selection = int(response.content)
-    except asyncio.TimeoutError:
-        print("time out")
+            server_list = ("""```## Multiple servers found. Specify the server name or enter a number.
+                        
+                        """)
 
-    try:
-        # get server IPAddress from user selected server
-        server = all_server_list[server_selection]
-        destination = requests.get(
-            f"https://www.battlemetrics.com{server[0][1]}")
-        soup = BeautifulSoup(destination.content, 'html.parser')
-        find_ip = soup.find(class_="css-1i1egz4")
+            for number, name in all_server_list.items():
+                server_list += (f"\n({number}) - { name[0][0]}")
+            await message.channel.send(server_list+"```")
+        except:
+            pass
 
-        data = []
+        try:
+            # wait message from user
+            response = await client.wait_for(
+                'message',
+                timeout=30,
+                check=lambda m: m.author == message.author
+            )
+            server_selection = int(response.content)
+        except asyncio.TimeoutError:
+            print("time out")
 
-        for element in find_ip:
-            span_elements = element.find_all("span")
-            for span in span_elements:
-                data.append(span.get_text())
-        ipAddress = data[1]
-        server_ip = ipAddress.split(":")
-        server_ip = (server_ip[0], int(server_ip[1]))
-    except UnboundLocalError:
-        pass
+        try:
+            # get server IPAddress from user selected server
+            server = all_server_list[server_selection]
+            destination = requests.get(
+                f"https://www.battlemetrics.com{server[0][1]}")
+            soup = BeautifulSoup(destination.content, 'html.parser')
+            find_ip = soup.find(class_="css-1i1egz4")
 
-    try:
-        players = a2s.players(address=server_ip)
-        server_info = a2s.info(address=server_ip)
-        await message.channel.send(f"```{server_info.server_name}\nMap: {server_info.map_name}\nPlayers: {server_info.player_count}/{server_info.max_players}```")
-        player_list = []
-        # add player data to player_list
-        for player in players:
-            player_name = player.name
-            player_duration = player.duration
-            hours, remainder = divmod(player_duration, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            time_str = f"{int(hours)}::{int(minutes)}::{int(seconds)}"
-            formatted_duration = datetime.strptime(
-                time_str, '%H::%M::%S').time()
+            data = []
 
-            player_list.append((player_name, formatted_duration))
-        show_player_list = "``` Online Time:          Name:"
-        for name, duration in player_list:
-            show_player_list += (f"\n  [{duration}]           {name}")
+            for element in find_ip:
+                span_elements = element.find_all("span")
+                for span in span_elements:
+                    data.append(span.get_text())
+            ipAddress = data[1]
+            server_ip = ipAddress.split(":")
+            server_ip = (server_ip[0], int(server_ip[1]))
+        except UnboundLocalError:
+            pass
 
-        await message.channel.send(show_player_list+"```")
-    except Exception as e:
-        print(e)
+        try:
+            players = a2s.players(address=server_ip)
+            server_info = a2s.info(address=server_ip)
+            await message.channel.send(f"```{server_info.server_name}\nMap: {server_info.map_name}\nPlayers: {server_info.player_count}/{server_info.max_players}```")
+            player_list = []
+            # add player data to player_list
+            for player in players:
+                player_name = player.name
+                steam_id = await get_steam_id(player_name)
+                player_duration = player.duration
+                hours, remainder = divmod(player_duration, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                time_str = f"{int(hours)}::{int(minutes)}::{int(seconds)}"
+                formatted_duration = datetime.strptime(
+                    time_str, '%H::%M::%S').time()
+                player_list.append((formatted_duration, player_name, steam_id))
+            show_player_list = "``` Online Time:          Name:                     SteamID:"
+            for duration, name, steam_id in player_list:
+                show_player_list += (
+                    f"\n [{duration}]           {name:<24}{steam_id}")
+
+            await message.channel.send(show_player_list+"```")
+        except Exception as e:
+            print(e)
+
 
 client.run(config.BOT_KEY)
