@@ -63,7 +63,8 @@ async def on_message(message):
                     all_server_list[list_number] = [
                         (serverList.get("title"), serverList.get("href"))]
 
-            server_list = ("```\n## Multiple servers found. Specify the server name or enter a number.\n\n")
+            server_list = (
+                "```\n## Multiple servers found. Specify the server name or enter a number.\n\n")
 
             for number, name in all_server_list.items():
                 server_list += (f"\n({number}) - { name[0][0]}")
@@ -130,31 +131,36 @@ async def on_message(message):
     # funcion show info player from id steam
     if message.content.startswith('!id'):
         id_steam = message.content.split()[1]
-        response = requests.get(
-            f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={config.STEAM_API_KEY}&steamids={id_steam}&format=json')
-        response_json = response.json()
-        player = response_json['response']['players'][0]
-
-        # get player data
-        name = player.get('personaname', 'Unknown')
-        profile_url = player.get('profileurl', '')
-        last_online = player.get('lastlogoff', 0)
-        time_since_last_online = datetime.utcnow().timestamp() - last_online
-        status = 'Online' if player.get('personastate', 0) == 1 else 'Offline'
-        game_id = player.get('gameid', 0)
-        last_played_game = ''
-        if game_id != 0:
+        try:
             response = requests.get(
-                f'https://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v0002/?appid={game_id}&key={config.STEAM_API_KEY}&steamid={id_steam}&format=json')
+                f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={config.STEAM_API_KEY}&steamids={id_steam}&format=json')
             response_json = response.json()
-            last_played_game = response_json.get(
-                'playerstats', {}).get('gameName', '')
+            player = response_json['response']['players'][0]
 
-        await message.channel.send(f"""```ini\n
-[Name]             : {name}
-[Profile]          : {profile_url}
-[Status]           : {status}
-[Last Online]      : {time_since_last_online // 3600} hours ago
-[Last Played Game] : {last_played_game}```""")
+            # get player data
+            name = player.get('personaname', 'Unknown')
+            profile_url = player.get('profileurl', '')
+            last_online = player.get('lastlogoff', 0)
+            time_since_last_online = datetime.utcnow().timestamp() - last_online
+            status = 'Online' if player.get(
+                'personastate', 0) == 1 else 'Offline'
+            game_id = player.get('gameid', 0)
+            last_played_game = ''
+            if game_id != 0:
+                response = requests.get(
+                    f'https://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v0002/?appid={game_id}&key={config.STEAM_API_KEY}&steamid={id_steam}&format=json')
+                response_json = response.json()
+                last_played_game = response_json.get(
+                    'playerstats', {}).get('gameName', '')
+
+            await message.channel.send(f"""```ini\n
+    [Name]             : {name}
+    [Profile]          : {profile_url}
+    [Status]           : {status}
+    [Last Online]      : {time_since_last_online // 3600} hours ago
+    [Last Played Game] : {last_played_game}```""")
+        except Exception as e:
+            print(e)
+
 
 client.run(config.BOT_KEY)

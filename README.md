@@ -2,6 +2,8 @@
 
 ![logo](image/logo.png)
 
+## Description
+
 Discord Ark Bot is a Discord bot created to simplify playing the game Ark: Survival Evolved. It features capabilities to fetch player data and inspect profiles on your server.
 
 ## Features
@@ -12,8 +14,17 @@ Discord Ark Bot is a Discord bot created to simplify playing the game Ark: Survi
 ![IMAGE DESCRIPTION](image/1.png)
 ![IMAGE DESCRIPTION](image/2.png)
 ![IMAGE DESCRIPTION](image/3.png)
+
+## Requeired
+
+- PRESENCE INTENT
+- SERVER MEMBERS INTENT
+- MESSAGE CONTENT INTENT
+![IMAGE DESCRIPTION](image/4.png)
+
 ## Usage
 
+replace your bot token, steam api key
 - !s (server name)
 - !id (SteamID64)
 
