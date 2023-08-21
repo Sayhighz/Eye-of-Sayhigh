@@ -63,9 +63,7 @@ async def on_message(message):
                     all_server_list[list_number] = [
                         (serverList.get("title"), serverList.get("href"))]
 
-            server_list = ("""```## Multiple servers found. Specify the server name or enter a number.
-                        
-                        """)
+            server_list = ("```\n## Multiple servers found. Specify the server name or enter a number.\n\n")
 
             for number, name in all_server_list.items():
                 server_list += (f"\n({number}) - { name[0][0]}")
@@ -107,7 +105,7 @@ async def on_message(message):
         try:
             players = a2s.players(address=server_ip)
             server_info = a2s.info(address=server_ip)
-            await message.channel.send(f"```{server_info.server_name}\nMap: {server_info.map_name}\nPlayers: {server_info.player_count}/{server_info.max_players}```")
+            await message.channel.send(f"```fix\n{server_info.server_name}\nMap: {server_info.map_name}\nPlayers: {server_info.player_count}/{server_info.max_players}```")
             player_list = []
             # add player data to player_list
             for player in players:
@@ -120,7 +118,7 @@ async def on_message(message):
                 formatted_duration = datetime.strptime(
                     time_str, '%H::%M::%S').time()
                 player_list.append((formatted_duration, player_name, steam_id))
-            show_player_list = "``` Online Time:          Name:                     SteamID:"
+            show_player_list = "```CSS\n[Online Time]          [Name]                     [SteamID]\n"
             for duration, name, steam_id in player_list:
                 show_player_list += (
                     f"\n [{duration}]           {name:<24}{steam_id}")
@@ -129,5 +127,34 @@ async def on_message(message):
         except Exception as e:
             print(e)
 
+    # funcion show info player from id steam
+    if message.content.startswith('!id'):
+        id_steam = message.content.split()[1]
+        response = requests.get(
+            f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={config.STEAM_API_KEY}&steamids={id_steam}&format=json')
+        response_json = response.json()
+        player = response_json['response']['players'][0]
+
+        # get player data
+        name = player.get('personaname', 'Unknown')
+        profile_url = player.get('profileurl', '')
+        last_online = player.get('lastlogoff', 0)
+        time_since_last_online = datetime.utcnow().timestamp() - last_online
+        status = 'Online' if player.get('personastate', 0) == 1 else 'Offline'
+        game_id = player.get('gameid', 0)
+        last_played_game = ''
+        if game_id != 0:
+            response = requests.get(
+                f'https://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v0002/?appid={game_id}&key={config.STEAM_API_KEY}&steamid={id_steam}&format=json')
+            response_json = response.json()
+            last_played_game = response_json.get(
+                'playerstats', {}).get('gameName', '')
+
+        await message.channel.send(f"""```ini\n
+[Name]             : {name}
+[Profile]          : {profile_url}
+[Status]           : {status}
+[Last Online]      : {time_since_last_online // 3600} hours ago
+[Last Played Game] : {last_played_game}```""")
 
 client.run(config.BOT_KEY)
