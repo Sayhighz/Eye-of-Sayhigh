@@ -1,5 +1,7 @@
 # Eye of Sayhigh
 
+![logo](image/logo.png)
+
 Discord Ark Bot is a Discord bot created to simplify playing the game Ark: Survival Evolved. It features capabilities to fetch player data and inspect profiles on your server.
 
 ## Features
