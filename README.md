@@ -24,7 +24,7 @@ Discord Ark Bot is a Discord bot created to simplify playing the game Ark: Survi
 
 ## Usage
 
-replace your bot token, steam api key
+replace your bot token, steam api key in config.py
 - !s (server name)
 - !id (SteamID64)
 
