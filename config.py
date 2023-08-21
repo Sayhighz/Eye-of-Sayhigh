@@ -1,3 +1,3 @@
-BOT_KEY = "MTEyNTQwNTE5NDMxOTA1NjkyNw.G2LUwi.YN_uhvOxl1E6eZBFC7cySoQvLh5le-8epNTdhc" # replace your bot token
+BOT_KEY = "your_bot_token" # replace your bot token
 
-STEAM_API_KEY = "9828AF670D5B9A0E1F72EEE45B106885" # replace your steam api key
+STEAM_API_KEY = "your_steam_api_key" # replace your steam api key
