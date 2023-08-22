@@ -13,21 +13,6 @@ intents.members = True
 client = discord.Client(intents=intents)
 
 
-async def get_steam_id(custom_url):
-    try:
-        if custom_url == '123':
-            return "unknow"
-        response = requests.get(
-            f'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={config.STEAM_API_KEY}&vanityurl={custom_url}')
-        response_json = response.json()
-        if response_json['response']['success'] == 1:
-            return response_json['response']['steamid']
-        else:
-            return "unknow"
-    except:
-        return "unknow"
-
-
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
@@ -111,18 +96,17 @@ async def on_message(message):
             # add player data to player_list
             for player in players:
                 player_name = player.name
-                steam_id = await get_steam_id(player_name)
                 player_duration = player.duration
                 hours, remainder = divmod(player_duration, 3600)
                 minutes, seconds = divmod(remainder, 60)
                 time_str = f"{int(hours)}::{int(minutes)}::{int(seconds)}"
                 formatted_duration = datetime.strptime(
                     time_str, '%H::%M::%S').time()
-                player_list.append((formatted_duration, player_name, steam_id))
-            show_player_list = "```CSS\n[Online Time]          [Name]                     [SteamID]\n"
-            for duration, name, steam_id in player_list:
+                player_list.append((formatted_duration, player_name))
+            show_player_list = "```ini\n[Online Time]          [Name]\n"
+            for duration, name in player_list:
                 show_player_list += (
-                    f"\n [{duration}]           {name:<24}{steam_id}")
+                    f"\n [{duration}]           {name:<24}")
 
             await message.channel.send(show_player_list+"```")
         except Exception as e:
@@ -154,11 +138,11 @@ async def on_message(message):
                     'playerstats', {}).get('gameName', '')
 
             await message.channel.send(f"""```ini\n
-    [Name]             : {name}
-    [Profile]          : {profile_url}
-    [Status]           : {status}
-    [Last Online]      : {time_since_last_online // 3600} hours ago
-    [Last Played Game] : {last_played_game}```""")
+[Name]             : {name}
+[Profile]          : {profile_url}
+[Status]           : {status}
+[Last Online]      : {time_since_last_online // 3600} hours ago
+[Last Played Game] : {last_played_game}```""")
         except Exception as e:
             print(e)
 
