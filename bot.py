@@ -2,8 +2,7 @@ import discord
 import asyncio
 import requests
 import config
-from a2s import players
-from a2s import info
+import a2s
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -90,8 +89,8 @@ async def on_message(message):
             pass
 
         try:
-            players = players(address=server_ip)
-            server_info = info(address=server_ip)
+            players = a2s.players(address=server_ip)
+            server_info = a2s.info(address=server_ip)
             await message.channel.send(f"```fix\n{server_info.server_name}\nMap: {server_info.map_name}\nPlayers: {server_info.player_count}/{server_info.max_players}```")
             player_list = []
             # add player data to player_list
